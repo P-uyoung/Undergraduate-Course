@@ -1,7 +1,7 @@
 #include <iostream>
 using namespace std;
 
-int min(int x, int y) {
+inline int min(int x, int y) {
 	return x > y ? y : x;
 }
 
