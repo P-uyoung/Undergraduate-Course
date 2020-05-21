@@ -1,6 +1,6 @@
-/* Euclidean Algorithm À» ÀÌ¿ëÇÑ GCD ±¸ÇÏ±â
-(a,b) = (b,r)		a > b, r: a¸¦ b·Î ³ª´« ³ª¸ÓÁö
-(b,0) ÀÏ ¶§, ÃÖ´ë°ø¾à¼ö´Â b	*/
+/* Euclidean Algorithm ì„ ì´ìš©í•œ GCD êµ¬í•˜ê¸°
+(a,b) = (b,r)		a > b, r: aë¥¼ bë¡œ ë‚˜ëˆˆ ë‚˜ë¨¸ì§€
+(b,0) ì¼ ë•Œ, ìµœëŒ€ê³µì•½ìˆ˜ëŠ” b	*/
 
 #include <iostream>
 using namespace std;
@@ -11,7 +11,7 @@ int main(void)
 {
 	int a, b;
 
-	cout << "ÃÖ´ë°ø¾à¼ö a b:";
+	cout << "ìµœëŒ€ê³µì•½ìˆ˜ a b:";
 	cin >> a >> b;
 
 	cout << GCD(a, b) << endl;
@@ -25,5 +25,5 @@ int GCD(int a, int b)
 		return a;
 	
 	else 
-		return GCD(b, a%b);
+		return GCD(b, a%b);	// ì¬ê·€í˜¸ì¶œ.. void í•¨ìˆ˜ê°€ ì•„ë‹ˆë¼ë©´ return 
 }
