@@ -25,5 +25,5 @@ int GCD(int a, int b)
 		return a;
 	
 	else 
-		return GCD(b, a%b);	// 재귀호출.. void 함수가 아니라면 return 
+		return GCD(b, a%b);	// 재귀호출.. void 함수가 아니라면 return 해야한다
 }
