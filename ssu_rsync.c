@@ -2,7 +2,7 @@
 
 char add_list[BUFFER_SIZE][BUFFER_SIZE];
 char rm_list[BUFFER_SIZE][BUFFER_SIZE];
-struct tm* rsync_start;  // 동기화 시작시각
+char cwd[BUFFER_SIZE];
 int add_count, rm_count; // rsync 추가, 삭제해야 할 개수
 
 int main(void)
@@ -26,7 +26,7 @@ int main(void)
 			exit(1);
 		}
 		
-		rsync();
+		rsync(argv);
 
 	
 	}
@@ -97,7 +97,7 @@ int check_argv(char (*argv)[BUFFER_SIZE])
 		return -1;
 }
 
-// rsc 파일일 때 동기화하는 함수
+// rsc 파일일 때 동기화할 파일 찾는 함수
 int rsync_file(char (*argv)[BUFFER_SIZE])
 {
 	char *tmp; // cwd pathname
@@ -160,7 +160,7 @@ int rsync_file(char (*argv)[BUFFER_SIZE])
 	chdir(tmp); // 원래 cwd 이동하기
 }
 
-// rsc 디렉토리일 때 동기화하는 함수
+// rsc 디렉토리일 때 동기화할 파일 찾는 함수
 int rsync_dir(char (*argv)[BUFFER_SIZE])
 {	
 	char *tmp; // cwd pathname
@@ -236,31 +236,116 @@ int rsync_dir(char (*argv)[BUFFER_SIZE])
 }
 
 // dst 디렉토리를 동기화하는 함수
-void rsync(void)
+void rsync(char (*argv)[BUFFER_SIZE])
 {
-	time_t rawtime;
-	FILE *fp; // swp 파일
+	char *str;
+	char buf;
+	struct stat statbuf, swp_stat, copy_stat;
+	FILE *fp, *swp_fp, *copy_fp;
 	
-	// 동기화 시작시간 구하기
-	time(&rawtime);
-	rsync_start = localtime(&rawtime);
-	
+	getcwd(cwd, BUFFER_SIZE);
+	chdir(argv[2]);
+
 	// 동기화 :삭제
 	for (int i = 0; i < rm_count; i++ ) {
-			
-		remove();
+		
+		strcpy(str, rm_list[i]);
+		strcat(str, ".swp");
+		
+		if ((fp = fopen(rm_list[i], "r")) == NULL) {
+			fprintf(stderr, "fopen error for %s\n", rm_list[i]);
+			exit(1);
+		}
 
+		if ((swp_fp = fopen(str, "w+")) == NULL) {
+			fprintf(stderr, "fopen error for %s\n", str);
+			exit(1);
+		}
+		
+		while(fgets(buf, BUFFER_SIZE, fp) != NULL)  // 파일 내용 .swp 파일에 복사
+			fputs(buf, swp_fp);
+
+		stat(rm_list[i], &statbuf);
+		stat(str, &swp_stat);
+		
+		swp_stat.st_size = statbuf.st_size;
+		swp_stat.st_mtime = swp_stat.st_mtime;
 	
-	
+		remove(rm_list[i]); // 파일 삭제
+
+		fclose(fp);
+		fclose(swp_fp);
 	}
-			
-	
-	
-}	
-// 핸들러 등록
-// 핸들러... 동기화 시작시간 후에 mtime 인거 지우기
-// 핸들러... 삭제된 거 되돌리기..
 
+	chdir(argv[1]);
+	// 동기화 :추가
+	for (int i = 0; i < add_count; i++) {
+
+		if ((fp = fopen(add_list[i], "r")) == NULL) {
+			fprintf(stderr, "fopen error for %s\n", add_list[i]);
+			exit(1);
+		}
+		char path; // add_list[i] 절대경로
+		char *tmp; // add_list[i] 파일명
+		char *temp; // dst 디렉토리내에 추가할 파일명(절대경로)
+		char buf;
+
+		realpath(add_list[i], path);
+		tmp = path;
+		tmp += strlen(path);
+
+		while (*tmp != '/')
+			tmp--;
+		strcpy(temp, argv[2]);
+		strcat(temp, tmp);
+		printf("dir 동기화 추가할 파일명 절대경로.. %s\n", temp);
+
+		if ((copy_fp = fopen(temp, "w+")) == NULL) {
+			fprintf(stderr, "fopen error for %s\n", temp);
+			exit(1);
+		}
+
+		while(fgets(buf, BUFFER_SIZE, fp) != NULL)
+			fputs(buf, copy_fp);
+
+		stat(add_list[i], &statbuf);
+		stat(str, &copy_stat);
+
+		copy_stat.st_size = statbuf.st_size;
+		copy_stat.st_mtime = statbuf.st_mtime;
+
+		fclose(fp);
+		fclose(copy_fp);
+	}
+
+	chdir(cwd);
+	
+	signal(SIGINT, ssu_signal_handler); // 핸들러 등록
 }
 
+// SIGINT 발생 시 동기화 중단하고 dst 디렉토리 원래대로 되돌리는 함수
+void ssu_signal_handler(int signo)
+{
+	char buf;
 
+	chdir(argv[2]);
+	
+	// 삭제된 파일 확인하기
+	for (int i = 0; i < ; i++) {
+		if (access(rm_list[i], F_OK) < 0) // 삭제된 경우
+			
+	}
+//
+// .swp 가 access 존재한다면,, 삭제!
+// SIGINT 가 발생하지 않았다면, swp 파일 삭제
+// 발생했다면, .swp에서 파일 새로 만들기 
+
+
+
+// 추가된건 add_list[] 존재하는지 확인 후, 존재하면 삭제..
+
+
+
+
+
+}
