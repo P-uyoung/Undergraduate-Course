@@ -21,6 +21,7 @@
 #define PATHMAX 1024
 #define FILE_NAME 1024
 #define TIME_LEN 24
+#define DIRECTORY_SIZE MAXNAMLEN
 #define TRUE 1
 #define FALSE 0
 #define null 0
