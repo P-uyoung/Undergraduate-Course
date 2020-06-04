@@ -2,6 +2,7 @@
 
 char add_list[BUFFER_SIZE][BUFFER_SIZE];
 char rm_list[BUFFER_SIZE][BUFFER_SIZE];
+struct tm* rsync_start;  // 동기화 시작시각
 int add_count, rm_count; // rsync 추가, 삭제해야 할 개수
 
 int main(void)
@@ -103,7 +104,7 @@ int rsync_file(char (*argv)[BUFFER_SIZE])
 	char str = argv[1];
 	char *src_rltv = 0;
 	struct dirent *dentry;
-	struct stat stbuf, statbuf; //stbuf: src stat구조체, statbuf: dir stat구조체
+	struct stat stbuf, statbuf; // stbuf: src stat구조체, statbuf: dir stat구조체
 	char fname[DIRECTORY_SIZE+1];
 	DIR *dirp;
 	int is_exist = 0;
@@ -155,22 +156,107 @@ int rsync_file(char (*argv)[BUFFER_SIZE])
 		strcpy(add_list[add_count], fname);
 		add_count++;
 	}
-
+	
+	chdir(tmp); // 원래 cwd 이동하기
 }
 
 // rsc 디렉토리일 때 동기화하는 함수
 int rsync_dir(char (*argv)[BUFFER_SIZE])
-{
+{	
+	char *tmp; // cwd pathname
+	struct dirent *src_dent, dst_dent;
+	struct stat src_st, dst_st; 
+	char src_fname[DIRECTORY_SIZE+1], dst_fname[DIRECTORY_SIZE+1];
+	DIR *src_dirp, dst_dirp;
+	int is_exist = 0;
+
+	tmp = malloc(sizeof(char) *PATHMAX);
+	getcwd(tmp, PATHMAX);
+
+	if ((src_dirp = opendir(argv[1])) == NULL || chdir(argv[1]) == -1) {
+		fprintf(stderr, "opendir, chdir error for %s\n", argv[1]);
+		exit(1);
+	}
+
+	while ((src_dent = readdir(src_dirp))!= NULL) {
+		if (dentry->d_ino == 0)
+			continue;
+		
+		memcpy(src_fname, src_dent->d_name, DIRECTORY_SIZE);
+
+		stat(src_fname, &src_st);
+
+		if (!S_ISDIR(src_st.st_mode)) { // src 디렉토리 내 임의의 파일이
+			
+			if ((dst_dirp = opendir(argv[2])) == NULL || chdir(argv[2]) == -1) {
+				fprintf(stderr, "opendir, chdir error for %s\n", argv[2]);
+				exit(1);
+			}
+
+			while ((dst_dent = readdir(dst_dirp))!= NULL) { // dst 디렉토리 내 임의의 파일과 비교
+				if (dentry->d_ino == 0)
+					continue;
+
+				memcpy(dst_fname, dst_dent->d_name, DIRECTORY_SIZE);
+
+				stat(dst_fname, &dst_st);
+
+				if (!S_ISDIR(dst_st.st_mode)) { 
+					
+					// src 디렉토리의 파일과 dst 디렉토리의 파일 비교
+					if (!strcmp(src_fname, dst_fname)) { // 파일명이 같을 때
+						if (src_st.st_size == dst_st.st_size &&
+								src_st.st_mtime == dst_st.st_mtime)
+							is_exist = 1;
+						else {			    // 파일명만 같은 다른 파일일 때
+							strcpy(rm_list[rm_count], src_fname);
+							rm_count++;
+							strcpy(add_list[add_count], src_fname);
+							add_count++;
+						}
+
+					}
+				}
+
+				if (is_exist)
+					break;
+			}
+
+			if (!is_exist) { // dst 디렉토리 내 동일한 파일이 없는 경우
+				strcpy(add_list[add_count], src_fname);
+				add_count++;
+			}
+		}
+
+		is_exist = 0;
 	
-
-
+	} // src 디렉토리 탐색 끝
+	
+	chdir(tmp); // 원래 cwd 이동하기
 }
 
-
+// dst 디렉토리를 동기화하는 함수
 void rsync(void)
 {
-// 동기화 시작시간 구하기
-// 동기화 
+	time_t rawtime;
+	FILE *fp; // swp 파일
+	
+	// 동기화 시작시간 구하기
+	time(&rawtime);
+	rsync_start = localtime(&rawtime);
+	
+	// 동기화 :삭제
+	for (int i = 0; i < rm_count; i++ ) {
+			
+		remove();
+
+	
+	
+	}
+			
+	
+	
+}	
 // 핸들러 등록
 // 핸들러... 동기화 시작시간 후에 mtime 인거 지우기
 // 핸들러... 삭제된 거 되돌리기..
