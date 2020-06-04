@@ -1,5 +1,5 @@
-#ifndef SSU_CRONTAB_H
-#define	SSU_CRONTAB_H
+#ifndef SSU_RSYNC_H
+#define	SSU_RSYNC_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,11 +24,6 @@
 #define TRUE 1
 #define FALSE 0
 #define null 0
-
-typedef struct exec_period {
-	int min[10], hour[10], day[10], month[10], week[10];
-	int min_count, hour_count, day_count, month_count, week_count;
-}exec_period;
 
 
 int command_separation(char *line, int argc, char (*argv)[BUFFER_SIZE]);

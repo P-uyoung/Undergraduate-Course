@@ -404,87 +404,14 @@ void write_add_log(char (*argv)[BUFFER_SIZE])
 // 명령어 저장 또는 삭제 될 때 시간 기록하는 함수
 void write_log_date() 
 {
-	struct tm *lt;
-	time_t ltime;
+	time_t rawtime;
+	char tmp[BUFFER_SIZE];
 
-   	ltime = time(NULL); 
-	lt = localtime(&ltime);
-
-	char wday[10] = {0};
-	char month[10] = {0};
-
-	switch (lt->tm_wday) {
-		case 0 :
-			strcpy(wday, "Sun");
-			break;
-		case 1 :
-			strcpy(wday, "Mon");
-			break;
-		case 2 :
-			strcpy(wday, "Tue");
-			break;
-
-		case 3 :
-			strcpy(wday, "Wed");
-			break;
-		case 4 :
-			strcpy(wday, "Thu");
-			break;
-		case 5 :
-			strcpy(wday, "Fri");
-			break;
-		case 6 :
-			strcpy(wday, "Sat");
-			break;
-		default :
-			exit(1);
-	}
-	
-	switch (lt->tm_mon) {
-		case 0 :
-			strcpy(month, "Jan");
-			break;
-		case 1 :
-			strcpy(month, "Feb");
-			break;
-		case 2 :
-			strcpy(month, "Mar");
-			break;
-		case 3 :
-			strcpy(month, "Apr");
-			break;
-		case 4 :
-			strcpy(month, "May");
-			break;
-		case 5 :
-			strcpy(month, "Jun");
-			break;
-		case 6 :
-			strcpy(month, "Jul");
-			break;
-		case 7 :
-			strcpy(month, "Aug");
-			break;
-		case 8 :
-			strcpy(month, "Sep");
-			break;
-		case 9 :
-			strcpy(month, "Oct");
-			break;
-		case 10 :
-			strcpy(month, "Nov");
-			break;
-		case 11 :
-			strcpy(month, "Dec");
-			break;
-		default :
-			exit(1);
-	}
+   	time(&rawtime);
+	memcpy(tmp, ctime(&rawtime), TIME_LEN);
 
 	char buf[BUFFER_SIZE];
-	sprintf(buf,"[%.3s %.3s %02d %02d:%02d:%02d %04d] ",
-			wday, month, lt->tm_mday, lt->tm_hour, lt->tm_min, 
-			lt->tm_sec, lt->tm_year +1900);	
+	sprintf(buf,"[%s] ", tmp);	
 	fputs(buf, log_fp);
 
 }
