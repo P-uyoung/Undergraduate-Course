@@ -164,3 +164,81 @@
 	a.txt 25bytes
 	b.c 26bytes
 	banana.c 22bytes
+[Sat Jun  6 04:41:07 2020] ssu_rsync src dst
+	test.c delete
+	apple.c delete
+	a.txt delete
+	b.c delete
+	banana.c delete
+	test.c 20bytes
+	apple.c 24bytes
+	a.txt 25bytes
+	b.c 26bytes
+	banana.c 22bytes
+[Sat Jun  6 04:41:45 2020] ssu_rsync src dst
+	test.c delete
+	apple.c delete
+	a.txt delete
+	b.c delete
+	banana.c delete
+	test.c 20bytes
+	apple.c 24bytes
+	a.txt 25bytes
+	b.c 26bytes
+	banana.c 22bytes
+[Sat Jun  6 04:44:40 2020] ssu_rsync src dst
+	test.c delete
+	apple.c delete
+	a.txt delete
+	b.c delete
+	banana.c delete
+	test.c 20bytes
+	apple.c 24bytes
+	a.txt 25bytes
+	b.c 26bytes
+	banana.c 22bytes
+[Sat Jun  6 04:53:50 2020] ssu_rsync src dst
+	test.c delete
+	apple.c delete
+	a.txt delete
+	b.c delete
+	banana.c delete
+	test.c 20bytes
+	apple.c 24bytes
+	a.txt 25bytes
+	b.c 26bytes
+	banana.c 22bytes
+[Sat Jun  6 04:54:10 2020] ssu_rsync src dst
+	test.c delete
+	apple.c delete
+	a.txt delete
+	b.c delete
+	banana.c delete
+	test.c 20bytes
+	apple.c 24bytes
+	a.txt 25bytes
+	b.c 26bytes
+	banana.c 22bytes
+[Sat Jun  6 05:03:35 2020] ssu_rsync src dst
+	test.c delete
+	apple.c delete
+	a.txt delete
+	b.c delete
+	banana.c delete
+	test.c 20bytes
+	apple.c 24bytes
+	a.txt 25bytes
+	b.c 26bytes
+	banana.c 22bytes
+[Sat Jun  6 05:03:48 2020] ssu_rsync src dst
+[Sat Jun  6 05:07:40 2020] ssu_rsync src dst
+	apple.c 24bytes
+	banana.c 22bytes
+[Sat Jun  6 05:08:54 2020] ssu_rsync src dst
+	test.c delete
+	test.c 20bytes
+[Sat Jun  6 05:17:42 2020] ssu_rsync src dst
+	test.c delete
+	test.c 20bytes
+	apple.c 24bytes
+	banana.c 22bytes

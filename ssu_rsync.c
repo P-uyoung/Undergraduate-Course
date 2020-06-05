@@ -120,7 +120,7 @@ int rsync_file(char (*argv)[BUFFER_SIZE])
 		if (ptr != NULL)
 			src_rltv = ptr;
 	}
-	printf("rsc 파일 상대경로명 : %s\n", src_rltv);
+	
 	stat(src_rltv, &stbuf);
 
 	if ((dirp = opendir(argv[2])) == NULL) { 
@@ -230,10 +230,6 @@ int rsync_dir(char (*argv)[BUFFER_SIZE])
 					
 					// src 디렉토리의 파일과 dst 디렉토리의 파일 비교
 					if (!strcmp(src_fname, dst_fname)) { // 파일명이 같을 때
-						printf("%s\n", src_fname);
-						printf("src_size : dir_size = %ld : %ld\n",src_st.st_size, dst_st.st_size);
-						printf("src_mtime : src_mtime = %ld : %ld\n", src_st.st_mtime, dst_st.st_mtime);
-						
 						if (src_st.st_size == dst_st.st_size &&
 								src_st.st_mtime == dst_st.st_mtime)
 							is_exist = 1;
@@ -263,11 +259,6 @@ int rsync_dir(char (*argv)[BUFFER_SIZE])
 		}
 
 	} // src 디렉토리 탐색 끝
-	printf("rm_count:%d add_count:%d\n", rm_count, add_count);
-	for (int i = 0; i <rm_count; i++)
-		printf("rm_count[%d]:%s\n", i, rm_list[i]);	
-	for (int i = 0; i <add_count; i++)
-		printf("add_count[%d]:%s\n", i, add_list[i]);	
 }
 
 // dst 디렉토리를 동기화하는 함수
@@ -275,7 +266,8 @@ void rsync(char (*argv)[BUFFER_SIZE])
 {
 	char str[BUFFER_SIZE];
 	char buf[BUFFER_SIZE];
-	struct stat statbuf, swp_stat, copy_stat;
+	struct stat statbuf, copy_stat;
+	struct utimbuf time_buf, utime_buf;
 	FILE *fp, *swp_fp, *copy_fp;
 	
 	chdir(argv[2]);
@@ -305,23 +297,17 @@ void rsync(char (*argv)[BUFFER_SIZE])
 			fprintf(stderr, "stat error for %s in rm_list\n", rm_list[i]);
 			exit(1);
 		}
-		if(stat(str, &swp_stat) < 0) {
-			fprintf(stderr, "stat error for %s\n", str);
-			exit(1);
-		}
 		
-		swp_stat.st_size = statbuf.st_size;
-		swp_stat.st_mtime = swp_stat.st_mtime;
-	
-		remove(rm_list[i]); // 파일 삭제
-
 		fclose(fp);
 		fclose(swp_fp);
-		printf("파일 삭제 완료\n");
+		
+		time_buf.modtime = statbuf.st_mtime;
+		utime(str, &time_buf);
+
+		remove(rm_list[i]); // 파일 삭제
+
 	}
 	
-	
-	printf("add_count : %d\n", add_count);
 	// 동기화 :추가
 	for (int i = 0; i < add_count; i++) {
 		chdir(cwd);
@@ -348,19 +334,15 @@ void rsync(char (*argv)[BUFFER_SIZE])
 		while(fgets(buf, BUFFER_SIZE, fp) != NULL)
 			fputs(buf, copy_fp);
 
-		if(stat(add_list[i], &copy_stat) < 0) {
-			fprintf(stderr, "stat error for %s in %s\n", add_list[i], argv[2]);
+		fclose(fp);
+		fclose(copy_fp);
+	
+		utime_buf.modtime = statbuf.st_mtime;
+		if(utime(add_list[i], &utime_buf) < 0) {
+			fprintf(stderr, "utime error\n");
 			exit(1);
 		}
 
-		printf("copy mtime : %ld\n", copy_stat.st_mtime);
-		printf("addlist mtime : %ld\n", statbuf.st_mtime);
-		copy_stat.st_size = statbuf.st_size;
-		copy_stat.st_mtime = statbuf.st_mtime;
-		printf("copy mtime : %ld\n", copy_stat.st_mtime);
-
-		fclose(fp);
-		fclose(copy_fp);
 	}
 
 	chdir(cwd);
@@ -369,7 +351,6 @@ void rsync(char (*argv)[BUFFER_SIZE])
 
 	signal(SIGINT, ssu_signal_handler); // 핸들러 등록
 
-	printf(" 동기화는 완료\n");
 }
 
 // SIGINT 발생 시 동기화 중단하고 dst 디렉토리 원래대로 되돌리는 함수
@@ -440,5 +421,4 @@ void write_log(char (*argv)[BUFFER_SIZE])
 		fprintf(fp, "\t%s %ldbytes\n", add_list[i], statbuf.st_size);
 	}
 
-	printf(" 로그 완료\n");
 }

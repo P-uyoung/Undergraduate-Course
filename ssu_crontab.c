@@ -409,7 +409,7 @@ void write_log_date()
 
    	time(&rawtime);
 	strncpy(tmp, ctime(&rawtime), TIME_LEN);
-	buf[TIME_LEN-2] = 0;
+	tmp[TIME_LEN-2] = 0;
 
 	char buf[BUFFER_SIZE];
 	sprintf(buf,"[%s] ", tmp);	
