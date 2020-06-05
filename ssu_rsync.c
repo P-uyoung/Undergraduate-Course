@@ -3,6 +3,7 @@
 char add_list[BUFFER_SIZE][BUFFER_SIZE];
 char rm_list[BUFFER_SIZE][BUFFER_SIZE];
 char cwd[BUFFER_SIZE];
+time_t rsync_time; // 동기화 완료 시간
 int add_count, rm_count; // rsync 추가, 삭제해야 할 개수
 
 int main(void)
@@ -26,7 +27,11 @@ int main(void)
 			exit(1);
 		}
 		
-		rsync(argv);
+		rsync(argv); // 동기화 시작
+
+		remove_swp(); // swp 파일 삭제
+
+		write_log(argv); // 로그파일 작성
 
 	
 	}
@@ -278,6 +283,7 @@ void rsync(char (*argv)[BUFFER_SIZE])
 	}
 
 	chdir(argv[1]);
+
 	// 동기화 :추가
 	for (int i = 0; i < add_count; i++) {
 
@@ -320,32 +326,76 @@ void rsync(char (*argv)[BUFFER_SIZE])
 
 	chdir(cwd);
 	
+	time(&rsync_time);
+
 	signal(SIGINT, ssu_signal_handler); // 핸들러 등록
 }
 
 // SIGINT 발생 시 동기화 중단하고 dst 디렉토리 원래대로 되돌리는 함수
 void ssu_signal_handler(int signo)
 {
-	char buf;
-
 	chdir(argv[2]);
 	
-	// 삭제된 파일 확인하기
-	for (int i = 0; i < ; i++) {
-		if (access(rm_list[i], F_OK) < 0) // 삭제된 경우
-			
+	// 삭제된 파일 되돌리기
+	for (int i = 0; i < rm_count; i++) {
+		if (access(rm_list[i], F_OK) < 0) { // 삭제된 경우
+			char swp[BUFFER_SIZE]; // .swp 파일명
+			strcpy(swp, rm_list[i]);
+			strcat(swp, ".swp");
+			if (access(swp, F_OK) == 0) 
+				rename(swp, rm_list[i]);									
+		}
 	}
-//
-// .swp 가 access 존재한다면,, 삭제!
-// SIGINT 가 발생하지 않았다면, swp 파일 삭제
-// 발생했다면, .swp에서 파일 새로 만들기 
 
+	// 복사된 파일 삭제하기
+	for (int i = 0; i < add_count; i++) {
+		if (access(add_list[i], F_OK) > 0)  // 복사한 파일이 있다면
+			remove(add_list[i]);		
+	}
+	
+	exit(EXIT_SUCCESS);
+}	
 
+// swp 파일을 삭제하는 함수
+void remove_swp(void)
+{
+	chdir(argv[2]);
+	
+	for (int i = 0; i <rm_count; i++) {
+		char swp[BUFFER_SIZE]; // .swp 파일명
+		strcpy(swp, rm_list[i]);
+		strcat(swp, ".swp");
+		if (access(swp, F_OK) == 0)
+			remove(swp);
+	}	
+	
+	chdir(cwd);
+}
 
-// 추가된건 add_list[] 존재하는지 확인 후, 존재하면 삭제..
+// 동기화 완료시 로그를 쓰는 함수
+void write_log(char (*argv)[BUFFER_SIZE])
+{
+	char buf[BUFFER_SIZE], tmp[BUFFER_SIZE];
+	int fd;
 
+	
+	if ((fd = fopen("ssu_rsync_log", "a")) == NULL) {
+		fprintf(stderr, "fopen error for %s\n", "ssu_rsync_log");
+		exit(1);
+	}
+	
+	memcpy(buf, ctime(&rsync_time), TIME_LEN);
 
+	fprintf(fp,"[&s] ssu_rsync %s %s\n", buf, argv[1], arv[2]);
+	
+	for (int i = 0; i < rm_count; i++) 
+		fprintf(fp, "\t%s delete\n", rm_list[i]); 
 
+	chdir(argv[2]);
+	for (int i = 0; i < add_count; i++) {
+		struct stat statbuf;
 
-
+		stat(add_list[i], &statbuf);
+		fprintf(fp, "\t%s %ld\n", add_list[i], statbuf.st_size);
+	}
 }

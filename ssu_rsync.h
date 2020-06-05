@@ -27,31 +27,20 @@
 #define null 0
 
 
-int command_separation(char *line, int argc, char (*argv)[BUFFER_SIZE]);
+void command_separation(char *line, char (*argv)[BUFFER_SIZE]);
 
-int min_scope_check(char (*argv)[BUFFER_SIZE], int i);
+int check_argv(char (*argv)[BUFFER_SIZE]);
 
-int hour_scope_check(char (*argv)[BUFFER_SIZE], int i);
+int rsync_file(char (*argv)[BUFFER_SIZE]);
 
-int day_scope_check(char (*argv)[BUFFER_SIZE], int i);
+int rsync_dir(char (*argv)[BUFFER_SIZE]);
 
-int month_scope_check(char (*argv)[BUFFER_SIZE], int i);
+void rsync(char (*argv)[BUFFER_SIZE]);
 
-int week_scope_check(char (*argv)[BUFFER_SIZE], int i);
+void ssu_siganl_handler(int signo);
 
-int opt_check(char (*argv)[BUFFER_SIZE]);
+void remove_swp(void);
 
-int number_check(char (*argv)[BUFFER_SIZE]);
-
-void add_command(char (*argv)[BUFFER_SIZE]);
-
-void remove_command(char (*argv)[BUFFER_SIZE]);
-
-void write_remove_log(char *command);
-
-void write_add_log(char (*argv)[BUFFER_SIZE]);
-
-void write_log_date();
+void write_log(char (*argv)[BUFFER_SIZE]);
 
 
-#endif
