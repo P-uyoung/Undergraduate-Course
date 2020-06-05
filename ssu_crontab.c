@@ -405,10 +405,11 @@ void write_add_log(char (*argv)[BUFFER_SIZE])
 void write_log_date() 
 {
 	time_t rawtime;
-	char tmp[BUFFER_SIZE];
+	char tmp[TIME_LEN];
 
    	time(&rawtime);
-	memcpy(tmp, ctime(&rawtime), TIME_LEN);
+	strncpy(tmp, ctime(&rawtime), TIME_LEN);
+	buf[TIME_LEN-2] = 0;
 
 	char buf[BUFFER_SIZE];
 	sprintf(buf,"[%s] ", tmp);	

@@ -20,7 +20,7 @@
 #define BUFFER_SIZE 1024
 #define PATHMAX 1024
 #define FILE_NAME 1024
-#define TIME_LEN 24
+#define TIME_LEN 26
 #define TRUE 1
 #define FALSE 0
 #define null 0

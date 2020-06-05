@@ -20,7 +20,7 @@
 #define BUFFER_SIZE 1024
 #define PATHMAX 1024
 #define FILE_NAME 1024
-#define TIME_LEN 24
+#define TIME_LEN 26
 #define DIRECTORY_SIZE MAXNAMLEN
 #define TRUE 1
 #define FALSE 0
@@ -37,10 +37,11 @@ int rsync_dir(char (*argv)[BUFFER_SIZE]);
 
 void rsync(char (*argv)[BUFFER_SIZE]);
 
-void ssu_siganl_handler(int signo);
+void ssu_signal_handler(int signo);
 
 void remove_swp(void);
 
 void write_log(char (*argv)[BUFFER_SIZE]);
 
 
+#endif
