@@ -1,51 +1,125 @@
 #include "ssu_crond.h"
 
-exec_period period;
-char exec_cycle[BUFFER_SIZE];
-char command[BUFFER_SIZE];
-int log_fd, crontab_fd;
+FILE *log_fp, *crontab_fp;
+int min[60][1], hour[24][1], mday[32][1], month[13][1], wday[7][1];
 
 int main(void)
 {
-	char *log_filename = "ssu_crontab_log";
 	char *crontab_filename = "ssu_crontab_file";
+	char buf[BUFFER_SIZE];
+	char token[6][BUFFER_SIZE] = {0};
 
-	if ((crontab_fd = open(crontab_filename, O_RDONLY | O_CREAT, 0666)) < 0) {
-		fprintf(stderr, "open error for %s\n", crontab_filename);
+	if ((crontab_fp = fopen(crontab_filename, "a+")) == NULL) {
+		fprintf(stderr, "fopen error for %s\n", crontab_filename);
 		exit(1);
 	}
 
+	while(fgets(buf, BUFFER_SIZE, crontab_fp) != NULL) {
+		memset(token, 0, sizeof(token));
+		command_separation(buf, token);
 
-	for (주기)
-		if (조건)
+		make_timetable(token);
 
-			if(system(command) != 0)
-				write_log();
-			else {
-				fprintf(stderr, "system error\n");
-				exit(1);
+	}
+	
+	
+	
+	fclose(crontab_fp);
+
+}
+
+// 명령어 분리하는 함수
+void command_separation(char *line, char (*token)[BUFFER_SIZE]) 
+{
+        int i, j;
+	int argc = 0;
+        int count  = (int)strlen(line);
+
+        for (i = 0; i < count; i++) {
+		if (i > 2) {
+			for (j = 0;;j++,i++) {
+				if (argc != 5) {
+					if(line[i] == ' ') {
+						token[argc][j] = '\0';
+						argc++;
+						break;
+					}
+				}
+
+				if (line[i] == '\n')
+					break;
+
+				token[argc][j] = line[i];
+			}
+		}
+	}
+	printf("argc:%d\n", argc);
+	for (int k = 0; k < argc+1; k++) {
+		printf("argv[%d] : %s\n", k, token[k]);
+	}
+
+}
+
+// 실행주기 테이블 만드는 함수
+void make_timetable(char (*token)[BUFFER_SIZE])
+{
+	char *ptr;
+	char *start, *end;
+	char front[10], back[10];
+	char buf[100][30] = {0};
+	int i = 0;
+
+	/* MINUTE TIME TABLE 만들기 */
+	// 쉼표로 토큰화하기
+	ptr = strtok(token[0], ",");
+
+	while (ptr != NULL) {
+		strcpy(buf[i], ptr);
+		i++;
+		ptr = strtok(NULL, ",");
+	}
+
+	// 주기로 토큰화하기
+	for (int j = 0; j < i; j++) {
+		ptr = strtok(buf[j], "/");
+		strcpy(front, ptr);
+		if((ptr = strtok(NULL, "/")) == NULL) { 	// 주기가 없을 때
+			start = strtok(buf[j], "-");	
+			if((end = strtok(NULL, "-")) == NULL) { // _범위가 없을 때
+				if(!strcmp(buf[j],"*")){	// _ _'*' 일 때
+					for (int k = 0; k < 60; k++)
+						min[k][0] = 1;
+				}
+				else				// _ _숫자일 때
+					min[atoi(buf[j])][0] = 1;
 			}
 
+			else {					// _범위가 있을 때
+				//strcpy(end, ptr);
+				for (int k = atoi(start); k <= atoi(end); k++) 
+					min[k][0] = 1;
+			}	
+		}
+		
+		else {
+			strcpy(back, ptr);  			// 주기가 있을 때
 
+			if (!strcmp(front, "*")) {  		// _범위가 없을 때('*')
+				for (int k = 0; k < 60; k++)
+					if (k%atoi(back) == 0)
+						min[k][0] = 1;
+			}
 
-
-
-
-	close(crontab_fd);
-
-}
-
-// 명령어 정상수행시 로그 작성하는 함수
-void write_log(void) 
-{
-	if ((log_fd = open(log_filename, O_WRONLY | O_CREAT, 0666)) < 0)
-	{
-		fprintf(stderr, "open error for %s\n", log_filename);
-		exit(1);
+			else {
+				start = strtok(front, "-"); // 범위가 있을 때
+				end = strtok(NULL,"-");
+				for (int k = atoi(start); k <= atoi(end); k++)
+					if ((k-atoi(start))%atoi(back) == 0)
+						min[k][0] = 1;
+			}	
+		}
 	}
 
-
-	close(log_fd);
+	for (int j = 0; j <60; j++)
+		printf("%d 분: %d\n",j, min[j][0]);	
 }
-
-

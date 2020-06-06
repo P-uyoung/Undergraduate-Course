@@ -169,7 +169,9 @@ int command_separation(char *line, int argc, char (*argv)[BUFFER_SIZE])  // 2차
 			argv[argc][j] = line[i];
 		}
 	}
-	
+
+//	for (int k = 0; k < argc+1; k++)
+//		printf("argv[%d]:%s\n",argc, argv[k]);	
 	return argc;
 }	
 
