@@ -6,8 +6,8 @@ int line_counter;
 
 int main(void)
 {
-	pid_t pid;
-	pid_t cpid;
+//	pid_t pid;
+//	pid_t cpid;
 
 	char buf[BUFFER_SIZE];
 	int status;
