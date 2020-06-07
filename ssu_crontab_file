@@ -3,3 +3,4 @@
 2. 1 1 1 1 1 echo
 3. * * * * * echo library
 4. * * * * * ls-l
+5. 1 1 1 1 2 echo "msg"

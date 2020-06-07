@@ -9,8 +9,11 @@ int main(void)
 //	pid_t pid;
 //	pid_t cpid;
 
+	struct timeval begin_t, end_t;
 	char buf[BUFFER_SIZE];
 	int status;
+
+	gettimeofday(&begin_t, NULL);
 
 /*	if ((pid = fork()) < 0)
 	{
@@ -133,8 +136,7 @@ int main(void)
 
 		else if (!strcmp(argv[0], "exit") || !strcmp(argv[0], "EXIT"))
 		{
-			printf("프로그램 종료됩니다\n");
-			exit(0);
+			break;
 		}
 
 		else {
@@ -149,6 +151,9 @@ int main(void)
 		fclose(log_fp);
 	}
 	
+	gettimeofday(&end_t, NULL);
+	ssu_runtime(&begin_t, &end_t);
+
 	exit(0);
 
 }
@@ -439,3 +444,18 @@ void write_log_date()
 	fputs(buf, log_fp);
 
 }
+
+// 프로그램 실행 시간을 기록하는 함수
+void ssu_runtime(struct timeval *begin_t, struct timeval *end_t)
+{
+	end_t->tv_sec -= begin_t->tv_sec;
+
+	if(end_t->tv_usec < begin_t->tv_usec){
+		end_t->tv_sec--;
+		end_t->tv_usec += SECOND_TO_MICRO;
+	}
+
+	end_t->tv_usec -= begin_t->tv_usec;
+	printf("Runtime: %ld:%06ld(sec:usec)\n", end_t->tv_sec, end_t->tv_usec);
+}
+

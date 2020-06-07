@@ -1,31 +1,87 @@
 #include "ssu_crond.h"
 
 FILE *log_fp, *crontab_fp;
-int min[60][1], hour[24][1], mday[32][1], month[13][1], wday[7][1];
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int min[60][1], hour[24][1], mday[32][1], month[13][1], wday[7][1]; // 명령어 TIME TABLE
+char exe_period[BUFFER_SIZE], command[BUFFER_SIZE]; // log 파일에 기록할 실행주기와 명령어
 
 int main(void)
 {
+	pthread_t tid;
+	struct timeval begin_t, end_t;
 	char *crontab_filename = "ssu_crontab_file";
 	char buf[BUFFER_SIZE];
 	char token[6][BUFFER_SIZE] = {0};
+
+	gettimeofday(&begin_t, NULL);
 
 	if ((crontab_fp = fopen(crontab_filename, "a+")) == NULL) {
 		fprintf(stderr, "fopen error for %s\n", crontab_filename);
 		exit(1);
 	}
 
-	while(fgets(buf, BUFFER_SIZE, crontab_fp) != NULL) {
-		memset(token, 0, sizeof(token));
-		command_separation(buf, token);
+	while (1) {
+		while(fgets(buf, BUFFER_SIZE, crontab_fp) != NULL) {
+			memset(token, 0, sizeof(token));
+			command_separation(buf, token);	// 실행주기와 명령어를 분리
 
-		make_timetable(token);
+			make_timetable(token); // 타임테이블 생성
 
+			if(pthread_create(&tid, NULL, ssu_thread, NULL) != 0) {
+				fprintf(stderr, "pthread_create error\n");
+				exit(1);
+			}
+
+			pthread_mutex_destroy(&mutex);
+
+		}
+		fclose(crontab_fp);
+		
+		sleep(60); // 1 분 간격 반복검사
 	}
-	
-	
-	
-	fclose(crontab_fp);
 
+	gettimeofday(&end_t, NULL);
+	ssu_runtime(&begin_t, &end_t);
+
+	exit(0);
+}
+
+// 반복 명령어를 수행하는 쓰레드 함수
+void *ssu_thread(void *arg)
+{
+	time_t rawtime;
+	struct tm *tm;
+	char tmp[TIME_LEN];
+
+	time(&rawtime);
+	tm = localtime(&rawtime);
+
+	if (min[tm->tm_min][0]) 
+		if (hour[tm->tm_hour][0])
+			if (mday[tm->tm_mday][0])
+				if (month[tm->tm_mon][0])
+					if (wday[tm->tm_wday][0]) { // 실행주기가 현재시간과 맞다면
+						pthread_mutex_lock(&mutex);
+
+						system(command);
+
+						if ((log_fp = fopen("ssu_crontab_log", "a+")) == NULL) {
+							fprintf(stderr, "fopen error for ssu_crontab_log\n");
+							exit(1);
+						}
+
+						strncpy(tmp, ctime(&rawtime), TIME_LEN);
+						tmp[TIME_LEN-2] = 0;
+
+						char buf[BUFFER_SIZE];
+						sprintf(buf, "[%s] run %s ", tmp, exe_period);
+						fputs(buf, log_fp);
+						fputs(command, log_fp);
+
+						pthread_mutex_unlock(&mutex);
+					}
+	
+	return NULL;
 }
 
 // 명령어 분리하는 함수
@@ -53,10 +109,19 @@ void command_separation(char *line, char (*token)[BUFFER_SIZE])
 			}
 		}
 	}
+	
+	strcpy(exe_period, token[0]); // log 파일에 기록할 실행주기
+	for (i = 1; i < 5; i++)
+		strcat(exe_period, token[i]);
+	strcpy(command, token[5]); // log 파일에 기록할 명령어
+/*	printf("%s\n", exec_period);
+ 	printf("%s\n", command);
+	
 	printf("argc:%d\n", argc);
 	for (int k = 0; k < argc+1; k++) {
-		printf("argv[%d] : %s\n", k, token[k]);
+		printf("token[%d] : %s\n", k, token[k]);
 	}
+*/
 
 }
 
@@ -359,3 +424,18 @@ void make_timetable(char (*token)[BUFFER_SIZE])
 		printf("%d 요일: %d\n",j, wday[j][0]);	
 	*/
 }
+
+// 실행시간을 출력하는 함수
+void ssu_runtime(struct timeval *begin_t, struct timeval *end_t)
+{
+	end_t->tv_sec -= begin_t->tv_sec;
+
+	if(end_t->tv_usec < begin_t->tv_usec){
+		end_t->tv_sec--;
+		end_t->tv_usec += SECOND_TO_MICRO;
+	}
+
+	end_t->tv_usec -= begin_t->tv_usec;
+	printf("Runtime: %ld:%06ld(sec:usec)\n", end_t->tv_sec, end_t->tv_usec);
+}
+

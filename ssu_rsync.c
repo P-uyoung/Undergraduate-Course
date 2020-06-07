@@ -8,33 +8,36 @@ int add_count, rm_count; // rsync 추가, 삭제해야 할 개수
 
 int main(void)
 {
-	while(1)
-	{
-		char line[BUFFER_SIZE];  //command
-		char argv[3][BUFFER_SIZE] = {0};
-		
-		memset(argv, 0, sizeof(argv));
+	struct timeval begin_t, end_t;
+	char line[BUFFER_SIZE];  //command
+	char argv[3][BUFFER_SIZE] = {0};
 
-		fgets(line, sizeof(line), stdin);
+	gettimeofday(&begin_t, NULL);
 
-		command_separation(line, argv); // 명령어 분리
+	memset(argv, 0, sizeof(argv));
 
-		if(check_argv(argv) < 0) { // src dst 입력 포맷 검사
-			printf("/* USAGE */\n");
-			printf("ssu_rsync <src> <dst>\n");
-			printf("<src> is file or directory.\n");
-			printf("<dst> is directory.\n");
-			exit(1);
-		}
-		
-		rsync(argv); // 동기화 시작
+	fgets(line, sizeof(line), stdin);
 
-		remove_swp(); // swp 파일 삭제
+	command_separation(line, argv); // 명령어 분리
 
-		write_log(argv); // 로그파일 작성
-		
-		exit(0);
+	if(check_argv(argv) < 0) { // src dst 입력 포맷 검사
+		printf("/* USAGE */\n");
+		printf("ssu_rsync <src> <dst>\n");
+		printf("<src> is file or directory.\n");
+		printf("<dst> is directory.\n");
+		exit(1);
 	}
+
+	rsync(argv); // 동기화 시작
+
+	remove_swp(); // swp 파일 삭제
+
+	write_log(argv); // 로그파일 작성
+
+	gettimeofday(&end_t, NULL);
+	ssu_runtime(&begin_t, &end_t);
+
+	exit(0);
 }
 
 // 명령어를 분리하는 함수
@@ -422,3 +425,18 @@ void write_log(char (*argv)[BUFFER_SIZE])
 	}
 
 }
+
+// 프로그램 실행시간을 출력하는 함수
+void ssu_runtime(struct timeval *begin_t, struct timeval *end_t)
+{
+	end_t->tv_sec -= begin_t->tv_sec;
+
+	if(end_t->tv_usec < begin_t->tv_usec){
+		end_t->tv_sec--;
+		end_t->tv_usec += SECOND_TO_MICRO;
+	}
+
+	end_t->tv_usec -= begin_t->tv_usec;
+	printf("Runtime: %ld:%06ld(sec:usec)\n", end_t->tv_sec, end_t->tv_usec);
+}
+

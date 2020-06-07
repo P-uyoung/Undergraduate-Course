@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <string.h>
 #include <malloc.h>
 #include <time.h>
@@ -23,6 +24,7 @@
 #define FILE_NAME 1024
 #define TIME_LEN 26
 #define DIRECTORY_SIZE MAXNAMLEN
+#define SECOND_TO_MICRO 1000000
 #define TRUE 1
 #define FALSE 0
 #define null 0
@@ -44,5 +46,6 @@ void remove_swp(void);
 
 void write_log(char (*argv)[BUFFER_SIZE]);
 
+void ssu_runtime(struct timeval *begin_t, struct timeval *end_t);
 
 #endif

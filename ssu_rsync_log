@@ -242,3 +242,4 @@
 	test.c 20bytes
 	apple.c 24bytes
 	banana.c 22bytes
+[Mon Jun  8 02:38:57 2020] ssu_rsync src dst
