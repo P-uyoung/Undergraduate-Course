@@ -69,10 +69,15 @@ void make_timetable(char (*token)[BUFFER_SIZE])
 	char buf[100][30] = {0};
 	int i = 0;
 
-	memset(buf, 0, sizeof(buf));
 	memset(min, 0, sizeof(min));
+	memset(hour, 0, sizeof(hour));
+	memset(mday, 0, sizeof(mday));
+	memset(month, 0, sizeof(month));
+	memset(wday, 0, sizeof(wday));
+	
+	/* MIN TIME TABLE 생성 */
+	memset(buf, 0, sizeof(buf));
 
-	/* MINUTE TIME TABLE 만들기 */
 	// 쉼표로 토큰화하기
 	ptr = strtok(token[0], ",");
 
@@ -99,12 +104,11 @@ void make_timetable(char (*token)[BUFFER_SIZE])
 			}
 
 			else {					// _범위가 있을 때
-				//strcpy(end, ptr);
 				for (int k = atoi(start); k <= atoi(end); k++) 
 					min[k][0] = 1;
 			}	
 		}
-		
+
 		else {
 			strcpy(back, ptr);  			// 주기가 있을 때
 
@@ -115,7 +119,7 @@ void make_timetable(char (*token)[BUFFER_SIZE])
 			}
 
 			else {
-				start = strtok(front, "-"); // 범위가 있을 때
+				start = strtok(front, "-"); 	// _범위가 있을 때
 				end = strtok(NULL,"-");
 				for (int k = atoi(start); k <= atoi(end); k++)
 					if ((k-atoi(start))%atoi(back) == 0)
@@ -123,7 +127,235 @@ void make_timetable(char (*token)[BUFFER_SIZE])
 			}	
 		}
 	}
+	
+ 	/* HOUR TIME TABLE 생성 */
+	i = 0;
+	memset(buf, 0, sizeof(buf));
 
+	// 쉼표로 토큰화하기
+	ptr = strtok(token[1], ",");
+
+	while (ptr != NULL) {
+		strcpy(buf[i], ptr);
+		i++;
+		ptr = strtok(NULL, ",");
+	}
+
+
+	// 주기로 토큰화하기
+	for (int j = 0; j < i; j++) {
+		ptr = strtok(buf[j], "/");
+		strcpy(front, ptr);
+		if((ptr = strtok(NULL, "/")) == NULL) { 	// 주기가 없을 때
+			start = strtok(buf[j], "-");	
+			if((end = strtok(NULL, "-")) == NULL) { // _범위가 없을 때
+				if(!strcmp(buf[j],"*")){	// _ _'*' 일 때
+					for (int k = 0; k < 24; k++)
+						hour[k][0] = 1;
+				}
+				else{				// _ _숫자일 때
+					hour[atoi(buf[j])][0] = 1;
+				}
+			}
+
+			else {					// _범위가 있을 때
+				for (int k = atoi(start); k <= atoi(end); k++) 
+					hour[k][0] = 1;
+			}	
+		}
+
+		else {
+			strcpy(back, ptr);  			// 주기가 있을 때
+
+			if (!strcmp(front, "*")) {  		// _범위가 없을 때('*')
+				for (int k = 0; k < 24; k++)
+					if (k%atoi(back) == 0)
+						hour[k][0] = 1;
+			}
+
+			else {
+				start = strtok(front, "-"); 	// _범위가 있을 때
+				end = strtok(NULL,"-");
+				for (int k = atoi(start); k <= atoi(end); k++)
+					if ((k-atoi(start))%atoi(back) == 0)
+						hour[k][0] = 1;
+			}	
+		}
+	}
+	
+	
+	/* MDAY TIME TABLE 생성 */
+	i = 0;
+	memset(buf, 0, sizeof(buf));
+
+	// 쉼표로 토큰화하기
+	ptr = strtok(token[2], ",");
+
+	while (ptr != NULL) {
+		strcpy(buf[i], ptr);
+		i++;
+		ptr = strtok(NULL, ",");
+	}
+
+	// 주기로 토큰화하기
+	for (int j = 0; j < i; j++) {
+		ptr = strtok(buf[j], "/");
+		strcpy(front, ptr);
+		if((ptr = strtok(NULL, "/")) == NULL) { 	// 주기가 없을 때
+			start = strtok(buf[j], "-");	
+			if((end = strtok(NULL, "-")) == NULL) { // _범위가 없을 때
+				if(!strcmp(buf[j],"*")){	// _ _'*' 일 때
+					for (int k = 1; k < 32; k++)
+						mday[k][0] = 1;
+				}
+				else{				// _ _숫자일 때
+					mday[atoi(buf[j])][0] = 1;
+				}
+			}
+
+			else {					// _범위가 있을 때
+				for (int k = atoi(start); k <= atoi(end); k++) 
+					mday[k][0] = 1;
+			}	
+		}
+
+		else {
+			strcpy(back, ptr);  			// 주기가 있을 때
+
+			if (!strcmp(front, "*")) {  		// _범위가 없을 때('*')
+				for (int k = 1; k < 32; k++)
+					if (k%atoi(back) == 0)
+						mday[k][0] = 1;
+			}
+
+			else {
+				start = strtok(front, "-"); 	// _범위가 있을 때
+				end = strtok(NULL,"-");
+				for (int k = atoi(start); k <= atoi(end); k++)
+					if ((k-atoi(start))%atoi(back) == 0)
+						mday[k][0] = 1;
+			}	
+		}
+	}
+	
+	/* MONTH TIME TABLE 생성 */
+	i = 0;
+	memset(buf, 0, sizeof(buf));
+
+	// 쉼표로 토큰화하기
+	ptr = strtok(token[3], ",");
+
+	while (ptr != NULL) {
+		strcpy(buf[i], ptr);
+		i++;
+		ptr = strtok(NULL, ",");
+	}
+
+	// 주기로 토큰화하기
+	for (int j = 0; j < i; j++) {
+		ptr = strtok(buf[j], "/");
+		strcpy(front, ptr);
+		if((ptr = strtok(NULL, "/")) == NULL) { 	// 주기가 없을 때
+			start = strtok(buf[j], "-");	
+			if((end = strtok(NULL, "-")) == NULL) { // _범위가 없을 때
+				if(!strcmp(buf[j],"*")){	// _ _'*' 일 때
+					for (int k = 1; k < 13; k++)
+						month[k][0] = 1;
+				}
+				else{				// _ _숫자일 때
+					month[atoi(buf[j])][0] = 1;
+				}
+			}
+
+			else {					// _범위가 있을 때
+				for (int k = atoi(start); k <= atoi(end); k++) 
+					month[k][0] = 1;
+			}	
+		}
+
+		else {
+			strcpy(back, ptr);  			// 주기가 있을 때
+
+			if (!strcmp(front, "*")) {  		// _범위가 없을 때('*')
+				for (int k = 1; k < 13; k++)
+					if (k%atoi(back) == 0)
+						month[k][0] = 1;
+			}
+
+			else {
+				start = strtok(front, "-"); 	// _범위가 있을 때
+				end = strtok(NULL,"-");
+				for (int k = atoi(start); k <= atoi(end); k++)
+					if ((k-atoi(start))%atoi(back) == 0)
+						month[k][0] = 1;
+			}	
+		}
+	}
+	
+	/* WDAY TIME TABLE 생성 */
+	i = 0;
+	memset(buf, 0, sizeof(buf));
+
+	// 쉼표로 토큰화하기
+	ptr = strtok(token[4], ",");
+
+	while (ptr != NULL) {
+		strcpy(buf[i], ptr);
+		i++;
+		ptr = strtok(NULL, ",");
+	}
+
+	// 주기로 토큰화하기
+	for (int j = 0; j < i; j++) {
+		ptr = strtok(buf[j], "/");
+		strcpy(front, ptr);
+		if((ptr = strtok(NULL, "/")) == NULL) { 	// 주기가 없을 때
+			start = strtok(buf[j], "-");	
+			if((end = strtok(NULL, "-")) == NULL) { // _범위가 없을 때
+				if(!strcmp(buf[j],"*")){	// _ _'*' 일 때
+					for (int k = 0; k < 7; k++)
+						wday[k][0] = 1;
+				}
+				else{				// _ _숫자일 때
+					wday[atoi(buf[j])][0] = 1;
+				}
+			}
+
+			else {					// _범위가 있을 때
+				for (int k = atoi(start); k <= atoi(end); k++) 
+					wday[k][0] = 1;
+			}	
+		}
+
+		else {
+			strcpy(back, ptr);  			// 주기가 있을 때
+
+			if (!strcmp(front, "*")) {  		// _범위가 없을 때('*')
+				for (int k = 0; k < 7; k++)
+					if (k%atoi(back) == 0)
+						wday[k][0] = 1;
+			}
+
+			else {
+				start = strtok(front, "-"); 	// _범위가 있을 때
+				end = strtok(NULL,"-");
+				for (int k = atoi(start); k <= atoi(end); k++)
+					if ((k-atoi(start))%atoi(back) == 0)
+						wday[k][0] = 1;
+			}	
+		}
+	}
+	
+	/*
 	for (int j = 0; j <60; j++)
 		printf("%d 분: %d\n",j, min[j][0]);	
+	for (int j = 0; j <24; j++)
+		printf("%d 시: %d\n",j, hour[j][0]);	
+	for (int j = 1; j <32; j++)
+		printf("%d 일: %d\n",j, mday[j][0]);	
+	for (int j = 1; j <13; j++)
+		printf("%d 월: %d\n",j, month[j][0]);	
+	for (int j = 0; j <7; j++)
+		printf("%d 요일: %d\n",j, wday[j][0]);	
+	*/
 }
