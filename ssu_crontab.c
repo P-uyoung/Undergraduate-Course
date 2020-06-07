@@ -91,15 +91,23 @@ int main(void)
 				continue;
 			}
 
-			if (opt_check(argv) == -1) { // ADD 항목 입력이 올바르지 않은 경우
-				printf("/* ADD 명령어 항목 입력 오류 */\n");
+			if (opt_check(argv) == -1) { // ADD 항목 입력 범위 오류
+				printf("/* ADD 명령어 항목 범위 오류 */\n");
 				printf("*범위: min(0-59), hour(0-23), 일(1-31), 월(1-12), 요일(0-6)\n");
-				printf("*기호: '*', '-', ',', '/'\n");
 				printf("\n");
 				
 				continue;	
 			}
+
+			else if (opt_check(argv) == -2) { // ADD 항목 입력 기호 오류
+				printf("/* ADD 명령어 항목 기호 오류 */\n");
+				printf("*기호: '*', '숫자-숫자', '숫자,숫자', '범위/주기'\n");
+				printf("\n");
+				
+				continue;	
 			
+			}
+
 			add_command(argv);	// 명령어 "ssu_crontab_file" 파일에 추가
 
 		}
@@ -157,7 +165,7 @@ int command_separation(char *line, int argc, char (*argv)[BUFFER_SIZE])  // 2차
 			if (argc != 6) {
 				if (line[i] == ' ')
 				{
-					argv[argc][j] = '\0';
+					argv[argc][j] = 0;
 					argc++;
 					break;
 				}
@@ -178,6 +186,9 @@ int command_separation(char *line, int argc, char (*argv)[BUFFER_SIZE])  // 2차
 // 실행주기 MIN(분)의 범위 검사하는 함수
 int min_scope_check(char (*argv)[BUFFER_SIZE], int i)	// argv[1][i] 의 범위 검사
 {
+//	for (int i= 0; i < strlen(argv[1]); i++)
+//		printf("argv[1][%d]:%d\n", i, argv[1][i]);
+
 	if (argv[1][i] == 48) {	// min:0
 		if (argv[1][i+1] >= 48 && argv[1][i+1] <= 57)
 			return -1;
@@ -207,6 +218,7 @@ int hour_scope_check(char (*argv)[BUFFER_SIZE], int i)	// argv[2][i]의 범위 �
 	}
 	
 	if (argv[2][i] >= 51 && argv[2][i] <= 57) { // hour 범위:3-9
+		if (argv[2][i+1] >= 48 && argv[2][i+1] <= 57)
 			return -1;
 	}
 }
@@ -261,41 +273,44 @@ int week_scope_check(char (*argv)[BUFFER_SIZE], int i)	// argv[5][i]의 범위 �
 // 실행주기 기호 검사하고 분리하는 함수
 int opt_check(char (*argv)[BUFFER_SIZE])
 {
-	min_scope_check(argv,0);
-	hour_scope_check(argv, 0);
-	day_scope_check(argv, 0);
-	month_scope_check(argv, 0);
-	week_scope_check(argv,0);
+	if(min_scope_check(argv,0) < 0) return -1;
+	if(hour_scope_check(argv, 0) <0) return -1;
+	if(day_scope_check(argv, 0) < 0) return -1;
+	if(month_scope_check(argv, 0) <0) return -1;
+	if(week_scope_check(argv,0) <0) return -1;
 	
 	for (int j = 1; j < 6; j++) { // min, hour, day, month, week 차례대로 검사 및 분리
-		for (int i = 0; i < strlen(argv[1]); i++) {
+		for (int i = 0; i < strlen(argv[j]); i++) {
+			//printf("argv[%d][%d] = %d\n", j,i, argv[j][i]);
 			if (argv[j][i] == '/' || argv[j][i] == ',' || argv[j][i] == '-') {
-				if (!(argv[j][i+1] >= 48 && argv[j][i+1] <= 57))  // 주기 뒤에 숫자가 아닐 때
-					return -1;
-				
-				switch (j) {
-					case 1 :
-						min_scope_check(argv, i+1);
-						break;
-					case 2 :
-						hour_scope_check(argv, i+1);
-						break;
-					case 3 :
-						day_scope_check(argv, i+1);
-						break;
-					case 4 :
-						month_scope_check(argv, i+1);
-						break;
-					case 5 :
-						week_scope_check(argv, i+1);
-						break;
-					default :
-						exit(1);
+				if (!(argv[j][i+1] >= 48 && argv[j][i+1] <= 57))  // 기호 뒤에 숫자가 아닐 때
+					return -2;
+				else {
+					switch (j) {
+						case 1 :
+							if(min_scope_check(argv, i+1) < 0) return -1;
+							break;
+						case 2 :
+							if(hour_scope_check(argv, i+1) <0) return -1;
+							break;
+						case 3 :
+							if(day_scope_check(argv, i+1) <0) return -1;
+							break;
+						case 4 :
+							if(month_scope_check(argv, i+1) <0) return -1;
+							break;
+						case 5 :
+							if(week_scope_check(argv, i+1) <0) return -1;
+							break;
+						default :
+							exit(1);
+					}
 				}
 			}
 				
-			else if (!(argv[j][i] == '*' || (argv[j][i] >= 48 && argv[j][i] <= 57))) // '*','-',',','/' 이외의 기호
-				return -1;
+			else if (argv[j][i] != '*' && (argv[j][i] < 48 || argv[j][i] > 57)) // '*','-',',','/' 이외의 기호
+				return -2;
+			
 		}	
 	}
 }
@@ -310,17 +325,21 @@ int number_check(char (*argv)[BUFFER_SIZE])
 		return -1;
 }
 
-// 명령어 ADD 하는 함수
+// "ssu_crontab_file" 파일에 명령어 ADD 하는 함수
 void add_command(char (*argv)[BUFFER_SIZE])
 {
 	char buf[BUFFER_SIZE];
 	
+	memset(buf, 0, BUFFER_SIZE);
+
 	sprintf(buf, "%d. ", line_counter);
 	fputs(buf,crontab_fp);
+	
 	for (int i = 1; i < 6; i++) {
 		fputs(argv[i],crontab_fp);
 		fputc(' ', crontab_fp);
 	}
+	
 	fputs(argv[6],crontab_fp);
 	fputc('\n',crontab_fp);
 	line_counter++;
@@ -328,7 +347,7 @@ void add_command(char (*argv)[BUFFER_SIZE])
 	write_add_log(argv);	
 }
 
-// 명령어 REMOVE 하는 함수
+// "ssu_crontab_file" 파일에 명령어 REMOVE 하는 함수
 void remove_command(char (*argv)[BUFFER_SIZE])
 {
 	char copy[BUFFER_SIZE][BUFFER_SIZE];	// 새로 오픈한 crontab_fp 에 복사할 버퍼
@@ -340,14 +359,16 @@ void remove_command(char (*argv)[BUFFER_SIZE])
 	int count = 0;
 	int number = atoi(argv[1]); 	// 삭제할 명령어 인덱스 (0 부터 시작)
 
-	printf("삭제인덱스 : %d\n", number);
+//	printf("삭제인덱스 : %d\n", number);
+	memset(copy, 0, sizeof(copy));
+	memset(temp, 0, BUFFER_SIZE);
 
 	fseek(crontab_fp, 0, SEEK_SET);
 	while (fgets(buf, BUFFER_SIZE, crontab_fp) != NULL) {
 		if (count < number){	// 입력숫자 이전 명령어
 			strcpy(copy[count],buf);	// 그대로 복사
-			printf("count < number 인 경우\n");
-			printf("%s", copy[count]);
+//			printf("count < number 인 경우\n");
+//			printf("%s", copy[count]);
 			
 		}
 		else if (count == number) {
@@ -359,10 +380,10 @@ void remove_command(char (*argv)[BUFFER_SIZE])
 		
 		else if (count > number) {  // 입력숫자 이후 명령어
 			str = buf;
-			*str = count +47;  // 인덱스 수 count -1 +48	
+			*str = count + 47; // 인덱스 수 count -1 + 48
 			strcpy(copy[count-1], buf);
-			printf("count > number 인 경우\n");
-			printf("%s", copy[count-1]);
+//			printf("count > number 인 경우\n");
+//			printf("%s", copy[count-1]);
 		}
 		count++;	
 	}
@@ -382,14 +403,14 @@ void remove_command(char (*argv)[BUFFER_SIZE])
 	write_remove_log(remove_command);
 }
 
-// 명령어 REMOVE 내용 "ssu_crontab_file" 파일에 기록하는 함수
+// 명령어 REMOVE 내용 "ssu_crontab_log" 파일에 기록하는 함수
 void write_remove_log(char *command)
 {
 	write_log_date();	// 삭제 시간 기록
 	fputs(command, log_fp);
 }		
 
-// 명령어 ADD 내용 "ssu_crontab_file" 파일에 기록하는 함수
+// 명령어 ADD 내용 "ssu_crontab_log" 파일에 기록하는 함수
 void write_add_log(char (*argv)[BUFFER_SIZE])
 {
 	write_log_date();	// 저장 시간 기록

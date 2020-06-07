@@ -69,6 +69,9 @@ void make_timetable(char (*token)[BUFFER_SIZE])
 	char buf[100][30] = {0};
 	int i = 0;
 
+	memset(buf, 0, sizeof(buf));
+	memset(min, 0, sizeof(min));
+
 	/* MINUTE TIME TABLE 만들기 */
 	// 쉼표로 토큰화하기
 	ptr = strtok(token[0], ",");
@@ -90,8 +93,9 @@ void make_timetable(char (*token)[BUFFER_SIZE])
 					for (int k = 0; k < 60; k++)
 						min[k][0] = 1;
 				}
-				else				// _ _숫자일 때
+				else{				// _ _숫자일 때
 					min[atoi(buf[j])][0] = 1;
+				}
 			}
 
 			else {					// _범위가 있을 때
