@@ -9,6 +9,8 @@
 #define MAX_TOKEN_SIZE 64
 #define MAX_NUM_TOKENS 64
 
+int a_tokenNo;	// | 구분자로 토큰화한 토큰개수
+
 /* Splits the string by space and returns the array of tokens
 *
 */
@@ -57,8 +59,7 @@ int main(int argc, char* argv[])
 		/* BEGIN: 구분자 '|' 토큰화하기 */
 		char **a_tokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
 		char *a_token = (char *)malloc(MAX_TOKEN_SIZE * sizeof(char));
-		int tokenIndex = -1;
-		int tokenNo = 0;	// 토큰개수
+		int a_tokenIndex = -1;
 
 		for (i=0; i<strlen(line); i++)
 		{
@@ -66,27 +67,27 @@ int main(int argc, char* argv[])
 
 			if (readChar =='|')
 			{
-				a_token[tokenIndex] = '\0';
-				if (tokenIndex != -1)
+				a_token[a_tokenIndex] = '\0';
+				if (a_tokenIndex != -1)
 				{
-					a_tokens[tokenNo] = (char*)malloc(MAX_TOKEN_SIZE*sizeof(char));
-					strcpy(a_tokens[tokenNo++], a_token);
+					a_tokens[a_tokenNo] = (char*)malloc(MAX_TOKEN_SIZE*sizeof(char));
+					strcpy(a_tokens[a_tokenNo++], a_token);
 					i++;
-					tokenIndex = -1;
+					a_tokenIndex = -1;
 				}
 			} else
-				a_token[++tokenIndex] = readChar;
+				a_token[++a_tokenIndex] = readChar;
 		}
-		if (tokenIndex != -1)
+		if (a_tokenIndex != -1)
 		{
-			a_token[tokenIndex] = '\0';
-			a_tokens[tokenNo] = (char*)malloc(MAX_TOKEN_SIZE*sizeof(char));
-			strcpy(a_tokens[tokenNo++], a_token);
+			a_token[a_tokenIndex] = '\0';
+			a_tokens[a_tokenNo] = (char*)malloc(MAX_TOKEN_SIZE*sizeof(char));
+			strcpy(a_tokens[t_okenNo++], a_token);
 		}
 
 		free(a_token);
-		printf("%d\n", tokenNo);
-		a_tokens[tokenNo] = NULL;
+		printf("%d\n", a_tokenNo);
+		a_tokens[a_tokenNo] = NULL;
 		for(i=0; a_tokens[i]!=NULL;i++)	
 		{
 			printf("pipe token %s (remove this debug output later)\n", a_tokens[i]);
@@ -95,11 +96,11 @@ int main(int argc, char* argv[])
 
 		
 		/* BEGIN: 파이프가 있는 경우 */
-		if (tokenNo > 1)
+		if (a_tokenNo > 1)
 		{
 			pid_t pid;
 			int pipe_fd[2];
-			int count = tokenNo-1; // 자식프로세스 생성개수
+			int count = a_tokenNo; // 재귀변수
 			char buf[MAX_INPUT_SIZE] = {0};
 
 			if (pipe(pipe_fd) == -1)
@@ -108,62 +109,8 @@ int main(int argc, char* argv[])
 				exit(1);
 			}
 
-			if (count > 0)
-				child_fork();
-			for (int j = 0; j < tokenNo; j++)
-			{
-				//pipe 초기화
-				// buf초기화
-				tokens = tokenize(a_tokens[j]);
-
-				dup2(pipe_fd[1],1);
-//				dup2(stdin,pipe_fd[0]);
-
-
-				if (execvp(tokens[0], tokens) < 0) 
-				{
-				
-					
-					sprintf(a_usr_path, "/usr%s", a_path);
-					printf("%d 프로세스 (/usr)경로명 %s\n", j+1, a_usr_path);
-
-					if (execv(a_usr_path, tokens) < 0)
-					{
-						printf("SSUShell : Incorrect command\n");
-						exit(1);
-					}
-				}
-
-				i = 0;
-				while(1) 
-				{
-					if (read(pipe_fd[1], &buf[i], 1) > 0)
-						i++;
-					
-					else
-					{
-						buf[i] = '\0';
-						break;
-					}
-				}
-				
-				printf("%s\n", buf);				
-
-
-				
-
-			}
-
+			child_fork(count, pipe_fd, a_tokens);
 			
-			
-			
-			
-			// Freeing the allocated memory	
-			for(i=0;a_tokens[i]!=NULL;i++){
-				free(a_tokens[i]);
-			}	
-			free(a_tokens);
-
 			continue;
 		}
 		/* END: 파이프가 있는 경우 */
@@ -174,7 +121,6 @@ int main(int argc, char* argv[])
    
        //do whatever you want with the commands, here we just print them
 		
-
 		for(i=0;tokens[i]!=NULL;i++)	
 		{
 			printf("found token %s (remove this debug output later)\n", tokens[i]);
@@ -214,8 +160,9 @@ int main(int argc, char* argv[])
 			free(tokens[i]);
 		}
 		free(tokens);
-
+		/* END: 파이프가 아닌 경우 */
 	}
+	
 	return 0;
 }
 
@@ -256,6 +203,7 @@ void child_fork(int n, int *p_fd, int **p_token )	// 자식 프로세스 개수
 {
 	pid_t pid;
 	char buf;
+	char **tokens = tokenize(a_tokens[;
 
 	if ((pid=fork()) < 0){
 			fprintf(stderr,"fork error\n");
@@ -270,7 +218,7 @@ void child_fork(int n, int *p_fd, int **p_token )	// 자식 프로세스 개수
 		close(STDIN_FILENO);
 		
 		int new_stdin = dup(p_fd[0]);
-		execlp(p_token[
+		execvp(p_token[
 
 			
 	}
@@ -293,7 +241,16 @@ void child_fork(int n, int *p_fd, int **p_token )	// 자식 프로세스 개수
 	
 	}
 
-	
+		
+			
+			
+			// Freeing the allocated memory	
+			for(i=0;a_tokens[i]!=NULL;i++){
+				free(a_tokens[i]);
+			}	
+			free(a_tokens);
+
+		
 
 
 
