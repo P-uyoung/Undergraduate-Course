@@ -82,15 +82,17 @@ int main(int argc, char* argv[])
 		{
 			a_token[a_tokenIndex] = '\0';
 			a_tokens[a_tokenNo] = (char*)malloc(MAX_TOKEN_SIZE*sizeof(char));
-			strcpy(a_tokens[t_okenNo++], a_token);
+			strcpy(a_tokens[a_tokenNo++], a_token);
 		}
 
 		free(a_token);
-		printf("%d\n", a_tokenNo);
+
+		printf("Debug) 파이프구분자 토큰개수 :%d\n", a_tokenNo);
+		
 		a_tokens[a_tokenNo] = NULL;
 		for(i=0; a_tokens[i]!=NULL;i++)	
 		{
-			printf("pipe token %s (remove this debug output later)\n", a_tokens[i]);
+			printf("Debug) pipe token :%s\n", a_tokens[i]);
 		}	
 		/* END: 구분자 '|' 토큰화하기 */
 
@@ -99,8 +101,9 @@ int main(int argc, char* argv[])
 		if (a_tokenNo > 1)
 		{
 			pid_t pid;
+			int status;
 			int pipe_counter = a_tokenNo-1;
-			int pipe_fd	= (int *)calloc(pipe_counter*2, sizeof(int));
+			int *pipe_fd = (int *)calloc(pipe_counter*2, sizeof(int));
 			int *ptr_fd = pipe_fd;
 //			int count = a_tokenNo; // 재귀변수
 
@@ -110,12 +113,14 @@ int main(int argc, char* argv[])
 					fprintf(stderr, "pipe error\n");
 					exit(1);
 				}
-				ptr+=2;
+				ptr_fd +=2;
 			}
 
 			int j = 0; // .. 0초기화
 			for (i = 0; i < a_tokenNo; i++) 
 			{
+				printf("Debug) %d 번째 루프\n", i+1);
+
 				if((pid=fork()) < 0)
 				{
 					fprintf(stderr, "fork error\n");
@@ -132,31 +137,40 @@ int main(int argc, char* argv[])
 					for (int k = 0; k < 2*pipe_counter; k++)
 						close(pipe_fd[k]);
 
-					tokens = tokenize(a_tokens[i])
+					tokens = tokenize(a_tokens[i]);
 					if (execvp(tokens[0],tokens) < 0)	// Execute and if it returns anything, exit!
 					{
 						printf("SSUShell : Incorrect command\n");
 						exit(1);
 					}
+					else{
+						printf("Debug) exec 정상실행 ");
+						while(tokens[i] != NULL)
+							printf("%s ", tokens[i++]);
+
+					}
 				} j += 2;
 			}
 
-			for (i = 0; i < 2*pipe_count++; i++)
+			for (i = 0; i < 2*pipe_counter++; i++)
 				close(pipe_fd[i]);
 
 			for (i = 0; i < a_tokenNo; i++)		// The only program that gets to this point is
 				wait(&status);					// the parent process, which should wait for completeion.
 
 			// Freeing the allocated memory	
+			for(i=0;tokens[i]!=NULL;i++){
+				free(tokens[i]);
+			}	
+			free(tokens);
+
 			for(i=0;a_tokens[i]!=NULL;i++){
 				free(a_tokens[i]);
 			}	
 			free(a_tokens);
 
-			for (i = 0; i <n; i++)
+			for (i = 0; i < a_tokenNo; i++)
 				printf("Debug) pipe_fd[%d] :%d\n", i,pipe_fd[i]);
-
-
 
 //			child_fork(count, pipe_fd, a_tokens);
 		//	
