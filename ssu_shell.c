@@ -97,33 +97,57 @@ int main(int argc, char* argv[])
 		/* BEGIN: 파이프가 있는 경우 */
 		if (tokenNo > 1)
 		{
+			pid_t pid;
 			int pipe_fd[2];
-			char a_path[MAX_TOKEN_SIZE] = {0};	// /bin 내장명령어 경로
-		
+			int count = tokenNo-1; // 자식프로세스 생성개수
+			char buf[MAX_INPUT_SIZE] = {0};
+
 			if (pipe(pipe_fd) == -1)
 			{
 				fprintf(stderr, "pipe error\n");
 				exit(1);
 			}
 
+			if (count > 0)
+				child_fork();
 			for (int j = 0; j < tokenNo; j++)
 			{
 				//pipe 초기화
-				memset(a_path, 0, sizeof(a_path));	
+				// buf초기화
 				tokens = tokenize(a_tokens[j]);
 
-				sprintf(a_path, "/bin/%s", tokens[0]);
-				printf("%d 프로세스 경로명 %s\n", a_path);
-				
-				dup2(stdout,pipe_fd[1]);
-				dup2(stdin,pipe_fd[0]);
+				dup2(pipe_fd[1],1);
+//				dup2(stdin,pipe_fd[0]);
 
 
-				if (execv(path, tokens) < 0) 
+				if (execvp(tokens[0], tokens) < 0) 
 				{
-					printf("SSUShell : Incorrect command\n");
-					exit(1);
+				
+					
+					sprintf(a_usr_path, "/usr%s", a_path);
+					printf("%d 프로세스 (/usr)경로명 %s\n", j+1, a_usr_path);
+
+					if (execv(a_usr_path, tokens) < 0)
+					{
+						printf("SSUShell : Incorrect command\n");
+						exit(1);
+					}
 				}
+
+				i = 0;
+				while(1) 
+				{
+					if (read(pipe_fd[1], &buf[i], 1) > 0)
+						i++;
+					
+					else
+					{
+						buf[i] = '\0';
+						break;
+					}
+				}
+				
+				printf("%s\n", buf);				
 
 
 				
@@ -160,10 +184,6 @@ int main(int argc, char* argv[])
 		// fork() > exec() > wait()
 		pid_t pid;
 		int status;
-		char path[MAX_TOKEN_SIZE] = {0};	// /bin 내장명령어 경로
-		char usr_path[MAX_TOKEN_SIZE] = {0};	// /usr/bin 내장명령어 경로
-
-		
 		
 		if ((pid = fork()) < 0) {
 			fprintf(stderr, "fork error\n"); 
@@ -172,24 +192,13 @@ int main(int argc, char* argv[])
 
 		else if (pid == 0)
 		{	
-			sprintf(path,"/bin/%s", tokens[0]);
-//			printf("실행파일 경로명 %s\n", path);
-			
-			if (execv(path, tokens) < 0) 
+			if (execvp(tokens[0], tokens) < 0) 
 			{
 				if(tokens[0][0] == '\n')
 					exit(1);
 
-				else 
-				{
-					sprintf(usr_path, "/usr%s", path);
-
-					if (execv(usr_path, tokens) < 0)
-					{
-						printf("SSUShell : Incorrect command\n");
-						exit(1);
-					}
-				}
+				printf("SSUShell : Incorrect command\n");
+				exit(1);
 			}
 		}
 
@@ -243,3 +252,51 @@ char **tokenize(char *line)
 }
 
 
+void child_fork(int n, int *p_fd, int **p_token )	// 자식 프로세스 개수
+{
+	pid_t pid;
+	char buf;
+
+	if ((pid=fork()) < 0){
+			fprintf(stderr,"fork error\n");
+			exit(1);
+	}
+
+	else if (pid == 0) {
+		if (n > 1)
+			child_fork(n-1, p_fd, p_token);
+		
+		close(p_fd[1]);
+		close(STDIN_FILENO);
+		
+		int new_stdin = dup(p_fd[0]);
+		execlp(p_token[
+
+			
+	}
+		
+
+	if (n > 1) 
+	{
+		if((pid=fork()) < 0){
+			fprintf(stderr,"fork error\n");
+			exit(1);
+		}
+		
+		child_fork(n-1);
+	
+	}else
+	{
+		if((pid = fork()
+		
+	
+	
+	}
+
+	
+
+
+
+
+
+}
