@@ -99,18 +99,33 @@ int main(int argc, char* argv[])
 		if (a_tokenNo > 1)
 		{
 			pid_t pid;
-			int pipe_fd[2];
-			int count = a_tokenNo; // 재귀변수
-			char buf[MAX_INPUT_SIZE] = {0};
+			int pipe_counter = a_tokenNo-1;
+			int pipe_fd	= (int *)calloc(pipe_counter*2, sizeof(int));
+			int *ptr_fd = pipe_fd;
+//			int count = a_tokenNo; // 재귀변수
 
-			if (pipe(pipe_fd) == -1)
-			{
-				fprintf(stderr, "pipe error\n");
-				exit(1);
+			for (i = 0; i < pipe_counter; i++) {
+				if (pipe(ptr_fd) == -1)
+				{
+					fprintf(stderr, "pipe error\n");
+					exit(1);
+				}
+				ptr+=2;
 			}
 
-			child_fork(count, pipe_fd, a_tokens);
+			for (i = 0; i < A_tokenNo; i++)
+			{
 			
+			
+			}
+
+			for (int i = 0; i <n; i++)
+				printf("Debug) ptr_fd[%d] :%d\n", i,ptr_fd[i]);
+
+
+
+//			child_fork(count, pipe_fd, a_tokens);
+		//	
 			continue;
 		}
 		/* END: 파이프가 있는 경우 */
@@ -197,13 +212,13 @@ char **tokenize(char *line)
   
   return tokens;
 }
+/*
 
-
-void child_fork(int n, int *p_fd, int **p_token )	// 자식 프로세스 개수
+void child_fork(int n, int *p_fd, int **p_tokens )	// 자식 프로세스 개수
 {
 	pid_t pid;
 	char buf;
-	char **tokens = tokenize(a_tokens[;
+	char **tokens = tokenize(p_tokens[a_tokenNo-n]);
 
 	if ((pid=fork()) < 0){
 			fprintf(stderr,"fork error\n");
@@ -212,48 +227,38 @@ void child_fork(int n, int *p_fd, int **p_token )	// 자식 프로세스 개수
 
 	else if (pid == 0) {
 		if (n > 1)
-			child_fork(n-1, p_fd, p_token);
+			child_fork(n-1, p_fd, p_tokens);
 		
 		close(p_fd[1]);
 		close(STDIN_FILENO);
 		
 		int new_stdin = dup(p_fd[0]);
-		execvp(p_token[
-
-			
-	}
-		
-
-	if (n > 1) 
-	{
-		if((pid=fork()) < 0){
-			fprintf(stderr,"fork error\n");
+		if (execvp(tokens[0], tokens) < 0)
+		{
+			printf("SSUShell : Incorrect command\n");
 			exit(1);
 		}
+
+		close(p_fd[0]);
+		close(new_stdin);
 		
-		child_fork(n-1);
-	
-	}else
+		exit(0);
+	}
+
+	else
 	{
-		if((pid = fork()
-		
-	
+		close(p_fd[0]);
+		close(STDOUT_FILENO);
+
+		int new_stdout = dup(p_fd[1]);
+
 	
 	}
 
-		
-			
-			
-			// Freeing the allocated memory	
-			for(i=0;a_tokens[i]!=NULL;i++){
-				free(a_tokens[i]);
-			}	
-			free(a_tokens);
 
-		
-
-
-
-
-
-}
+	// Freeing the allocated memory	
+	for(i=0;a_tokens[i]!=NULL;i++){
+		free(a_tokens[i]);
+	}	
+	free(a_tokens);
+}*/
