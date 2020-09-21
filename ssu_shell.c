@@ -51,7 +51,6 @@ int main(int argc, char* argv[])
 			scanf("%[^\n]", line);
 			getchar();
 		}
-		//		printf("Command entered: %s (remove this debug output later)\n", line);
 		/* END: TAKING INPUT */
 
 		line[strlen(line)] = '\n'; //terminate with new line
@@ -126,11 +125,11 @@ int main(int argc, char* argv[])
 			multiple_pipe(pipe_tokens);			
 
 			// Freeing the allocated memory	
-			for (i=0;i< pipe_counter;i++){
-				for(int j=0; j < MAX_TOKEN_SIZE;j++){
-					free(*(*(pipe_tokens+i)+j));
+			for (i=0;pipe_tokens[i]!=NULL;i++){
+				for(int j=0;pipe_tokens[i][j]!=NULL;j++){
+					free(pipe_tokens[i][j]);
 				}
-				free(*(pipe_tokens+i));
+				free(pipe_tokens[i]);
 			}
 			free(pipe_tokens);
 
@@ -233,8 +232,6 @@ void multiple_pipe(char ***cmd)
 
 	while (*cmd != NULL)
 	{
-		printf("Debug) in multiple_pipe\n");
-		
 		if (pipe(fd)==-1)
 		{
 			fprintf(stderr, "pipe error\n");
@@ -249,19 +246,15 @@ void multiple_pipe(char ***cmd)
 
 		else if (pid == 0)
 		{
-			printf("Debug) child proces\n");
 			dup2(fd_in, 0);	// change the input according to the old one
-			printf("Debug) before dup2..\n");
 			if(*(cmd+1) != NULL)
 				dup2(fd[1], 1);
-		
-			printf("Debug) before close..\n");
-			
 			close(fd[0]);
-			
-			printf("Debug) before execvp\n");
-
 			if(execvp((*cmd)[0], *cmd) < 0)
+			{
+				printf("SSUShell : Incorrect command\n");
+				exit(1);
+			}
 			exit(EXIT_FAILURE);
 		}
 
@@ -272,7 +265,7 @@ void multiple_pipe(char ***cmd)
 			fd_in = fd[0];	// save the input for the next command
 			cmd++;
 		}
-	}	
+	}
 }
 
 
