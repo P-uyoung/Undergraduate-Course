@@ -38,6 +38,8 @@ int main(int argc, char* argv[])
 	{			
 		/* BEGIN: TAKING INPUT */
 		bzero(line, sizeof(line));
+		a_tokenNo = 0;
+
 		if(argc == 2)	// batch mode
 		{ 
 			if(fgets(line, sizeof(line), fp) == NULL) { // file reading finished
@@ -128,6 +130,8 @@ int main(int argc, char* argv[])
 				}
 				else if (pid == 0)
 				{/* child */
+
+					printf("Debug) I am child\n");
 					if (i < pipe_counter && dup2(pipe_fd[j+1],1) < 0)	// If this is not the last remaining command
 						exit(1);
 
@@ -137,16 +141,15 @@ int main(int argc, char* argv[])
 					for (int k = 0; k < 2*pipe_counter; k++)
 						close(pipe_fd[k]);
 
-					tokens = tokenize(a_tokens[i]);
-					if (execvp(tokens[0],tokens) < 0)	// Execute and if it returns anything, exit!
+					if (execvp(a_tokens[0],a_tokens) < 0)	// Execute and if it returns anything, exit!
 					{
 						printf("SSUShell : Incorrect command\n");
 						exit(1);
 					}
 					else{
 						printf("Debug) exec 정상실행 ");
-						while(tokens[i] != NULL)
-							printf("%s ", tokens[i++]);
+						while(a_tokens[i] != NULL)
+							printf("%s ", a_tokens[i++]);
 
 					}
 				} j += 2;
@@ -158,22 +161,18 @@ int main(int argc, char* argv[])
 			for (i = 0; i < a_tokenNo; i++)		// The only program that gets to this point is
 				wait(&status);					// the parent process, which should wait for completeion.
 
-			// Freeing the allocated memory	
-			for(i=0;tokens[i]!=NULL;i++){
-				free(tokens[i]);
-			}	
-			free(tokens);
+			for (i = 0; i < a_tokenNo; i++)
+				printf("Debug) pipe_fd[%d] :%d\n", i,pipe_fd[i]);
 
+
+			// Freeing the allocated memory	
 			for(i=0;a_tokens[i]!=NULL;i++){
 				free(a_tokens[i]);
 			}	
 			free(a_tokens);
 
-			for (i = 0; i < a_tokenNo; i++)
-				printf("Debug) pipe_fd[%d] :%d\n", i,pipe_fd[i]);
-
 //			child_fork(count, pipe_fd, a_tokens);
-		//	
+			
 			continue;
 		}
 		/* END: 파이프가 있는 경우 */
@@ -223,7 +222,13 @@ int main(int argc, char* argv[])
 			free(tokens[i]);
 		}
 		free(tokens);
-		/* END: 파이프가 아닌 경우 */
+		
+		for(i=0;a_tokens[i]!=NULL;i++){
+			free(a_tokens[i]);
+		}	
+		free(a_tokens);
+
+	/* END: 파이프가 아닌 경우 */
 	}
 	
 	return 0;
