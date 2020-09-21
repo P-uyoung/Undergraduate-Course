@@ -113,14 +113,48 @@ int main(int argc, char* argv[])
 				ptr+=2;
 			}
 
-			for (i = 0; i < A_tokenNo; i++)
+			int j = 0; // .. 0초기화
+			for (i = 0; i < a_tokenNo; i++) 
 			{
-			
-			
+				if((pid=fork()) < 0)
+				{
+					fprintf(stderr, "fork error\n");
+					exit(1);
+				}
+				else if (pid == 0)
+				{/* child */
+					if (i < pipe_counter && dup2(pipe_fd[j+1],1) < 0)	// If this is not the last remaining command
+						exit(1);
+
+					if (j != 0 && dup2(pipe_fd[j-2],0) < 0)	// If this is not the first command
+						exit(1);
+
+					for (int k = 0; k < 2*pipe_counter; k++)
+						close(pipe_fd[k]);
+
+					tokens = tokenize(a_tokens[i])
+					if (execvp(tokens[0],tokens) < 0)	// Execute and if it returns anything, exit!
+					{
+						printf("SSUShell : Incorrect command\n");
+						exit(1);
+					}
+				} j += 2;
 			}
 
-			for (int i = 0; i <n; i++)
-				printf("Debug) ptr_fd[%d] :%d\n", i,ptr_fd[i]);
+			for (i = 0; i < 2*pipe_count++; i++)
+				close(pipe_fd[i]);
+
+			for (i = 0; i < a_tokenNo; i++)		// The only program that gets to this point is
+				wait(&status);					// the parent process, which should wait for completeion.
+
+			// Freeing the allocated memory	
+			for(i=0;a_tokens[i]!=NULL;i++){
+				free(a_tokens[i]);
+			}	
+			free(a_tokens);
+
+			for (i = 0; i <n; i++)
+				printf("Debug) pipe_fd[%d] :%d\n", i,pipe_fd[i]);
 
 
 
