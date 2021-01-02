@@ -20,7 +20,7 @@ for (i=1:1:length(A))   % 배열인덱스 1부터
     end
 end
 
-%% (예제)학점 계산기
+% (예제)학점 계산기
 score = input('성적을 입력하시오>>');
 
 if score >= 90
