@@ -91,37 +91,18 @@ int main(int argc, char* argv[])
 		free(a_token);
 		pipe_tokens[pipe_counter+1] = NULL;
 
-		printf("Debug) pipe count :%d\n",pipe_counter);
+/*		printf("Debug) pipe count :%d\n",pipe_counter);
 
 		for(i=0; pipe_tokens[i]!=NULL;i++){	
 			for(int j = 0; pipe_tokens[i][j] != NULL; j++)
 				printf("Debug) pipe_tokens[%d][%d] :%s\n",i,j, pipe_tokens[i][j]);
 		}
-		/* END: 구분자 '|' 토큰화하기 */
+*/		/* END: 구분자 '|' 토큰화하기 */
 
 
 		/* BEGIN: 파이프가 있는 경우 */
 		if (pipe_counter > 0)
 		{
-
-			/*			char ***pipe_tokens = (char***)calloc(pipe_countera_tokenNo,sizeof(char**));
-						for(i = 0; i < a_tokenNo; i++){
-			 *(pipe_tokens+i) = (char**)calloc(MAX_NUM_TOKENS,sizeof(char*));
-			 for (int j = 0; j < MAX_NUM_TOKENS; j++){
-			 *(*(pipe_tokens+i)+j) = (char*)calloc(MAX_TOKEN_SIZE,sizeof(char));
-			 }
-			 }
-
-			 for (i = 0; i < a_tokenNo; i++){
-			 strcpy(line, a_tokens[i]);
-			 *(pipe_tokens+i) = tokenize(line);
-			 }
-
-			 for (i = 0; i <a_tokenNo; i++)
-			 for (int j= 0; j < 2; j++)
-			 printf("pipe_tokens[%d][%d][]=%s\n",i,j,pipe_tokens[i][j]);
-			 */
-			
 			multiple_pipe(pipe_tokens);			
 
 			// Freeing the allocated memory	
@@ -141,7 +122,7 @@ int main(int argc, char* argv[])
 
 		/* BEGIN: 파이프가 아닌 경우 */
 		tokens = tokenize(line);
-		//	printf("Debug) tokenNo = %d\n", tokenNo);
+/*		//	printf("Debug) tokenNo = %d\n", tokenNo);
 		//do whatever you want with the commands, here we just print them
 
 		for(i=0;tokens[i]!=NULL;i++)	
@@ -149,7 +130,7 @@ int main(int argc, char* argv[])
 			printf("Debug) found token %s\n", tokens[i]);
 
 		}			
-
+*/
 		// fork() > exec() > wait()
 		pid_t pid;
 		int status;
@@ -174,8 +155,6 @@ int main(int argc, char* argv[])
 		else
 		{
 			wait(&status);	// 자식프로세스 회수
-			//			printf("자식 프로세스 회수 완료\n");
-			// ...
 		}
 
 		// Freeing the allocated memory	
@@ -183,8 +162,6 @@ int main(int argc, char* argv[])
 			free(tokens[i]);
 		}
 		free(tokens);
-
-
 		/* END: 파이프가 아닌 경우 */
 	}
 
