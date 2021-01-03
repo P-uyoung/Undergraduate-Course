@@ -1,4 +1,5 @@
-[number, yy, mm, dd, hh, mmm, temper, psu] = textread('C:\Users\pc\Desktop\busan.txt','%u %u %u %u %u %u %f %f', 'headerlines', 6, 'delimiter', '/:-');
+[number, yy, mm, dd, hh, mmm, temper, psu] = textread('C:\Users\pc\Desktop\busan.txt','%u %u %u %u %u %u %f %f', ...
+'headerlines', 6, 'delimiter', '/:-');
 
 % 텍스트파일명 한글이면 오류
 % M파일명 내장함수명과 동일하면 오류
@@ -14,6 +15,7 @@ hold on
 psu = flipud(psu);
 plot(psu)
 % 0값은 결측값을 나타냄
+
 legend('temp', 'psu') % legend, 범례를 그래프에 추가
 
 
