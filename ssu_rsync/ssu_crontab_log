@@ -1,0 +1,8 @@
+[Sun Jun  7 22:14:37 2020] add * * * * * echo
+[Sun Jun  7 22:15:06 2020] add 0-12/2,14-20/3 1,2,3 1 1 1 echo
+[Sun Jun  7 22:17:02 2020] add 1 1 1 1 1 echo
+[Sun Jun  7 22:17:11 2020] add * * * * * echo
+[Sun Jun  7 22:17:21 2020] add * * * * * echo library
+[Sun Jun  7 22:17:31 2020] add * * * * * ls-l
+[Sun Jun  7 22:17:37 2020] remove * * * * * echo
+[Mon Jun  8 02:39:25 2020] add 1 1 1 1 2 echo "msg"
