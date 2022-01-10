@@ -1,4 +1,0 @@
-data temperature letter
-1, 4, a,
-2, 5, b,
-3, 6, c,
